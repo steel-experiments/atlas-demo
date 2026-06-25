@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.atlas-runs/
+reports/*.md
+reports/*.json
+reports/*.log
+*.tgz
