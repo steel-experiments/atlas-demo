@@ -1,35 +1,8 @@
-# Public Biotech Diligence with Atlas
+# Atlas public company research demo
 
-A vertical deep-research agent that turns public biotech sources into a cited diligence memo.
+A small Atlas demo that turns public sources into a cited research memo.
 
-This repo is a demo for [Atlas](https://github.com/steel-dev/atlas), the open-source deep research SDK from Steel. Atlas gives you the research loop: search, browser fetch, source ingestion, claim tracking, verification, and a cited report. This demo shows how to customize that loop for one industry.
-
-```bash
-npm install @steel-dev/atlas ai @ai-sdk/openai
-```
-
-## What This Shows
-
-Atlas is not only a generic web researcher. You can point it at a vertical, add domain sources, route different roles to different models, and keep the final report grounded in verified public evidence.
-
-This demo researches a public biotech company by combining:
-
-| Source | Job |
-| --- | --- |
-| SEC EDGAR | Company filings, risk factors, management disclosure, 10-K, 10-Q, 8-K |
-| ClinicalTrials.gov | Trial status, NCT IDs, interventions, phase, sponsor, enrollment |
-| PubMed | Peer-reviewed clinical and scientific evidence |
-| Tavily, Exa, or Brave | Optional current web context |
-| Steel | Optional browser fetch for pages that need real rendering |
-
-Default run:
-
-```text
-company: Moderna
-ticker:  MRNA
-topic:   CMV vaccine program
-output:  cited public-source diligence memo
-```
+The domain here is public biotech companies. The pattern is more general: wire Atlas to the sources your workflow trusts, give it a focused question, and get back a report with citations instead of a pile of search results.
 
 ## Quickstart
 
@@ -48,7 +21,7 @@ OPENAI_API_KEY=...
 ATLAS_SEC_EMAIL=you@example.com
 ```
 
-Optional source and fetch providers:
+Optional search and fetch providers:
 
 ```bash
 TAVILY_API_KEY=...
@@ -57,25 +30,78 @@ BRAVE_API_KEY=...
 STEEL_API_KEY=...
 ```
 
-Run the default memo:
-
-```bash
-npm run research
-```
-
-Run a specific diligence question:
+Run the demo:
 
 ```bash
 npm run research -- \
-  --company "Moderna" \
-  --ticker MRNA \
-  --topic "CMV vaccine program" \
+  --company "Butterfly Network" \
+  --ticker BFLY \
+  --topic "Midjourney collaboration or reported connection" \
   --effort balanced \
   --budget 2 \
-  --out reports/moderna-cmv.md
+  --out reports/bfly-midjourney.md
 ```
 
-## How It Works
+Without `--out`, the CLI prints the memo to stdout. Use `--json` for the full Atlas result and `--store` to persist the run journal.
+
+## What this demo does
+
+You give it:
+
+- a public company
+- a ticker
+- a program, product, or risk question
+
+It reads from:
+
+- SEC EDGAR filings
+- ClinicalTrials.gov
+- PubMed
+- optional web search
+- optional Steel browser fetches
+
+It writes:
+
+- a cited memo
+- a source map and evidence table
+- filing disclosures, clinical evidence, risks, contradictions, and open questions
+
+This is not investment, legal, or medical advice. It only uses public evidence and should not infer private facts.
+
+## Why Atlas
+
+Atlas handles the research loop that most teams end up rebuilding:
+
+- planning what needs to be answered
+- searching and fetching sources
+- keeping source records around
+- tracking claims
+- checking the draft before the final answer
+- binding citations
+- streaming progress events
+- persisting a run journal when you need one
+
+This repo adds the biotech-specific pieces: source adapters, tools, instructions, and model routing. Swap those out and the same structure can become a securities-risk researcher, clinical evidence scout, supplier compliance researcher, or internal research workflow.
+
+Read the launch post: [Atlas: a deep research harness you can own](https://steel.dev/blog/atlas-sdk).
+
+Install Atlas in your own app:
+
+```bash
+npm install @steel-dev/atlas ai @ai-sdk/openai
+```
+
+## Sources used
+
+| Source | Job |
+| --- | --- |
+| SEC EDGAR | Company filings, risk factors, management disclosure, 10-K, 10-Q, 8-K |
+| ClinicalTrials.gov | Trial status, NCT IDs, interventions, phase, sponsor, enrollment |
+| PubMed | Peer-reviewed clinical and scientific evidence |
+| Tavily, Exa, or Brave | Optional current web context |
+| Steel | Optional browser fetch for pages that need real rendering |
+
+## How it works
 
 ```text
 question
@@ -89,50 +115,48 @@ question
   -> cited memo
 ```
 
-The demo config lives in [src/index.ts](src/index.ts). The model routing lives in [src/model-routing.ts](src/model-routing.ts). The domain adapters live in [src/domain](src/domain).
+The demo config lives in [src/index.ts](src/index.ts). Model routing lives in [src/model-routing.ts](src/model-routing.ts). Domain adapters live in [src/domain](src/domain).
 
-## Model Routing
+## Model routing
 
-The default profile is `hybrid`: cheaper GLM models do broad exploration, while GPT-5.5 handles verification and final writing.
+The default profile is `hybrid`: GLM handles broad exploration, while GPT-5.5 handles verification and final writing.
 
-| Profile | Lead | Research | Extract | Verify | Write | Best For |
+| Profile | Lead | Research | Extract | Verify | Write | Best for |
 | --- | --- | --- | --- | --- | --- | --- |
-| `hybrid` | GLM | GLM | GLM | GPT-5.5 | GPT-5.5 | Default demo runs |
-| `high-stakes` | GPT-5.5 | GLM | GLM | GPT-5.5 | GPT-5.5 | More conservative diligence |
+| `hybrid` | GLM | GLM | GLM | GPT-5.5 | GPT-5.5 | General runs |
+| `high-stakes` | GPT-5.5 | GLM | GLM | GPT-5.5 | GPT-5.5 | More conservative memos |
 | `cheap` | GLM | GLM | GLM | GLM | GLM | Fast experiments |
 
 Run a profile:
 
 ```bash
-npm run research -- --profile hybrid
-npm run research -- --profile high-stakes
-npm run research -- --profile cheap
+npm run research -- --profile hybrid --company "Company Name" --ticker TICKER --topic "risk question"
+npm run research -- --profile high-stakes --company "Company Name" --ticker TICKER --topic "risk question"
+npm run research -- --profile cheap --company "Company Name" --ticker TICKER --topic "risk question"
 ```
 
-`balanced` is the default effort. In the current Atlas envelope, `balanced` uses the `verify` role for the verification panel. `deep` and `max` escalate the panel to the lead model.
+`balanced` is the default effort. `deep` and `max` spend more work on verification.
 
-## Customize It
+## Customize it
 
-Change the vertical question in [src/index.ts](src/index.ts):
+Change the generated research question in [src/index.ts](src/index.ts):
 
 ```ts
 const question = buildQuestion(opts);
 ```
 
-Add another domain source by implementing either:
+Add another source by implementing either:
 
 - `SearchProvider`, for sources that behave like search
-- `researchTool`, for sources the agent should call directly with structured input
+- `researchTool`, for sources the agent should call with structured input
 
-The demo already includes:
+Included adapters:
 
 - [src/domain/edgar.ts](src/domain/edgar.ts)
 - [src/domain/pubmed.ts](src/domain/pubmed.ts)
 - [src/domain/clinicaltrials.ts](src/domain/clinicaltrials.ts)
 
-Atlas also has example adapters or source integrations for arXiv, OpenAlex, Semantic Scholar, and Wikipedia.
-
-## Use Atlas In Your Own App
+## Use Atlas in your app
 
 Minimal server-side setup:
 
@@ -175,34 +199,19 @@ Keep Atlas on the server side. It uses provider keys, search keys, and optional 
 ## Scripts
 
 ```bash
-npm run research     # run the demo CLI
-npm test             # run unit tests (node:test via tsx)
+npm run research     # requires --company, --ticker, and --topic
+npm test             # run unit tests
 npm run typecheck    # TypeScript check
 npm run build        # compile to dist/
 npm run start        # run compiled output
 ```
 
-## Publish Checklist
+## Contributing
 
-Before publishing this demo:
+This repo is a demo, not a supported product. We are not planning ongoing support or feature development for it.
 
-```bash
-rm -rf node_modules package-lock.json
-npm install
-npm test
-npm run typecheck
-npm run build
-```
+Bug fixes and small improvements are welcome, but production use should start from a fork or copy that you adapt to your own sources, prompts, models, and compliance needs. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Make sure `package-lock.json` resolves `@steel-dev/atlas` from the public npm registry, not a local tarball.
+## License
 
-## Next Ideas
-
-This same pattern can become:
-
-- a securities risk researcher using EDGAR plus web context
-- a clinical evidence scout using PubMed, ClinicalTrials.gov, OpenAlex, and Semantic Scholar
-- a supplier diligence researcher with custom compliance sources
-- an internal research workflow with your own private adapters
-
-Atlas gives you the loop. The vertical is where you add judgment.
+MIT. See [LICENSE](LICENSE).

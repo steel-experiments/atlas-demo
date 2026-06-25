@@ -30,7 +30,7 @@ export function clinicaltrials(
 
   return researchTool({
     description:
-      "Search ClinicalTrials.gov for trial status, design, enrollment, sponsor, interventions, and brief summaries. Use this for biotech pipeline diligence and trial verification.",
+      "Search ClinicalTrials.gov for trial status, design, enrollment, sponsor, interventions, and brief summaries. Use this for biotech pipeline research and trial verification.",
     inputSchema: jsonSchema<{ query: string }>({
       type: "object",
       properties: {

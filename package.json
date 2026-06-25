@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Vertical Atlas demo for public-biotech diligence research.",
+  "description": "Atlas demo for cited public-company biotech research.",
+  "license": "MIT",
   "scripts": {
     "research": "tsx src/index.ts",
     "preresearch": "node -e \"require('node:fs').mkdirSync('reports',{recursive:true})\"",

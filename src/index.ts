@@ -28,15 +28,15 @@ import {
 } from "./model-routing.js";
 import { streamProgress } from "./progress.js";
 
-const USAGE = `atlas-demo: public-biotech diligence researcher
+const USAGE = `atlas-demo: public-company biotech research memo
 
 Usage:
   npm run research -- [options]
 
 Options:
-      --company NAME       Public company name (default: Moderna)
-      --ticker SYMBOL      Ticker symbol (default: MRNA)
-      --topic TEXT         Program, product, or risk focus (default: CMV vaccine program)
+      --company NAME       Public company name (required)
+      --ticker SYMBOL      Ticker symbol (required)
+      --topic TEXT         Program, product, or risk question (required)
       --profile NAME       hybrid | high-stakes | cheap (default: MODEL_PROFILE or hybrid)
       --effort LEVEL       fast | balanced | deep | max (default: balanced)
       --budget USD         Best-effort Atlas budget cap
@@ -47,7 +47,7 @@ Options:
   -h, --help               Show this help
 
 Example:
-  npm run research -- --company "Moderna" --ticker MRNA --topic "CMV vaccine program" --budget 2 --out reports/moderna-cmv.md
+  npm run research -- --company "Company Name" --ticker TICKER --topic "program, product, or risk question" --budget 2 --out reports/company-memo.md
 `;
 
 interface CliOptions {
@@ -142,9 +142,9 @@ function parseCli(): CliOptions {
   }
 
   return {
-    company: parsed.values.company ?? "Moderna",
-    ticker: parsed.values.ticker ?? "MRNA",
-    topic: parsed.values.topic ?? "CMV vaccine program",
+    company: requiredOption(parsed.values.company, "--company"),
+    ticker: requiredOption(parsed.values.ticker, "--ticker"),
+    topic: requiredOption(parsed.values.topic, "--topic"),
     profile: parseModelProfile(parsed.values.profile),
     effort,
     budget,
@@ -153,6 +153,14 @@ function parseCli(): CliOptions {
     json: parsed.values.json,
     quiet: parsed.values.quiet === true,
   };
+}
+
+function requiredOption(raw: string | undefined, name: string): string {
+  const value = raw?.trim();
+  if (!value) {
+    throw new Error(`${name} is required. Run with --help for usage.`);
+  }
+  return value;
 }
 
 function parseEffort(raw: string | undefined): Effort {
@@ -207,7 +215,7 @@ function resolveSearchProviders(): AtlasConfig["search"] {
 
 function verticalInstructions(): string {
   return [
-    "You are a public-biotech diligence analyst using public sources.",
+    "You are a public-company biotech research analyst using public sources.",
     "Prioritize primary sources: SEC filings, trial registries, peer-reviewed abstracts, and company disclosures.",
     "Separate company disclosure, clinical evidence, trial registry status, market context, and unresolved questions.",
     "Do not provide investment, legal, or medical advice. State this briefly only where a recommendation might otherwise sound like advice.",
@@ -217,7 +225,7 @@ function verticalInstructions(): string {
 }
 
 function buildQuestion(opts: CliOptions): string {
-  return `Build a public-source diligence memo on ${opts.company} (${opts.ticker}), focused on ${opts.topic}.
+  return `Build a public-source research memo on ${opts.company} (${opts.ticker}), focused on ${opts.topic}.
 
 Use the vertical sources available to you:
 - EDGAR for recent 10-K, 10-Q, 8-K, S-1, risk factor, and management disclosure.
