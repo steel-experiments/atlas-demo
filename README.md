@@ -1,4 +1,4 @@
-# Atlas public company research demo
+# Public company deep research demo on Atlas SDK
 
 A small Atlas demo that turns public sources into a cited research memo.
 
